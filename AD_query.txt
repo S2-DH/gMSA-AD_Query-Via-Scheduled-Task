@@ -1,0 +1,123 @@
+# ============================================================
+#  AD_query.txt  -  Edit both values before each test run.
+#  Do NOT add -Server here (injected via DC_Target in gMSA_settings.txt).
+#  Do NOT add | Out-File (handled automatically by the script).
+#
+#  $Account is just a string - put any object identifier here:
+#    UPN, SamAccountName, Distinguished Name, CN, or object name.
+# ============================================================
+
+# --- TARGET OBJECT ---
+# Set this to whatever you are querying: user UPN, group name, OU DN, etc.
+$Account = "SDH_ACNTEST_User_01@states.local"
+# ----------^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+# ============================================================
+#  QUERY EXAMPLES BY OBJECT TYPE
+#  Uncomment ONE $AD_Query block at a time.
+# ============================================================
+
+# ------------------------------------------------------------
+#  USERS
+# ------------------------------------------------------------
+
+# Check a user by UPN (object-agnostic - works for any object with a UPN)
+# $AD_Query = "Get-ADObject -Filter {UserPrincipalName -eq '$Account'} -Properties userAccountControl, objectClass | Select-Object Name, SamAccountName, objectClass, userAccountControl"
+
+# Check a user account directly by SamAccountName or UPN
+# $AD_Query = "Get-ADUser '$Account' -Properties userAccountControl, Enabled, PasswordLastSet, LastLogonDate, MemberOf | Select-Object Name, SamAccountName, Enabled, userAccountControl, PasswordLastSet, LastLogonDate"
+
+# ------------------------------------------------------------
+#  GROUPS
+# ------------------------------------------------------------
+
+# Check a group's properties (set $Account to the group name)
+# $Account = "Domain Admins"
+# $AD_Query = "Get-ADGroup '$Account' -Properties Members, ManagedBy, Description | Select-Object Name, GroupScope, GroupCategory, ManagedBy, Description, Members"
+
+# List all members of a group
+# $Account = "Domain Admins"
+# $AD_Query = "Get-ADGroupMember '$Account' | Select-Object Name, SamAccountName, objectClass, DistinguishedName"
+
+# Recursively list all members of a group (expands nested groups)
+# $Account = "Domain Admins"
+# $AD_Query = "Get-ADGroupMember '$Account' -Recursive | Select-Object Name, SamAccountName, objectClass"
+
+# ------------------------------------------------------------
+#  COMPUTERS AND DOMAIN CONTROLLERS
+# ------------------------------------------------------------
+
+# Check a specific computer or DC (set $Account to the computer name)
+# $Account = "DC01"
+# $AD_Query = "Get-ADComputer '$Account' -Properties * | Select-Object Name, OperatingSystem, OperatingSystemVersion, Enabled, LastLogonDate, IPv4Address"
+
+# List all computers in an OU
+# $Account = "OU=Domain Controllers,DC=states,DC=local"
+# $AD_Query = "Get-ADComputer -Filter * -SearchBase '$Account' | Select-Object Name, Enabled, OperatingSystem"
+
+# List all DCs
+# $AD_Query = "Get-ADDomainController -Filter * | Select-Object Name, Site, IPv4Address, IsGlobalCatalog, OperatingSystem"
+
+# ------------------------------------------------------------
+#  ORGANISATIONAL UNITS (OUs)
+# ------------------------------------------------------------
+
+# Check a specific OU (set $Account to the full DN)
+# $Account = "OU=Tier Zero,OU=STRATA,DC=states,DC=local"
+# $AD_Query = "Get-ADOrganizationalUnit -Identity '$Account' -Properties * | Select-Object Name, DistinguishedName, Description, ManagedBy, LinkedGroupPolicyObjects"
+
+# List all OUs under a search base
+# $Account = "OU=STRATA,DC=states,DC=local"
+# $AD_Query = "Get-ADOrganizationalUnit -Filter * -SearchBase '$Account' | Select-Object Name, DistinguishedName"
+
+# List OUs with their linked GPOs
+# $Account = "DC=states,DC=local"
+# $AD_Query = "Get-ADOrganizationalUnit -Filter * -SearchBase '$Account' -Properties LinkedGroupPolicyObjects | Select-Object Name, DistinguishedName, LinkedGroupPolicyObjects | Where-Object { $_.LinkedGroupPolicyObjects.Count -gt 0 }"
+
+# ------------------------------------------------------------
+#  GROUP POLICY OBJECTS (GPOs)
+# ------------------------------------------------------------
+
+# NOTE: Get-GPO requires the GroupPolicy module (GPMC RSAT).
+#       If it fails in the scheduled task context, use the Get-ADObject
+#       version below instead - it only needs the AD module.
+
+# List all GPOs via GroupPolicy module (needs GPMC RSAT installed)
+# $AD_Query = "Get-GPO -All | Select-Object DisplayName, GpoStatus, CreationTime, ModificationTime"
+
+# Check a specific GPO by name (needs GPMC RSAT)
+# $Account = "Default Domain Policy"
+# $AD_Query = "Get-GPO -Name '$Account' | Select-Object DisplayName, GpoStatus, CreationTime, ModificationTime, Id"
+
+# List all GPOs via AD module only (safer for gMSA scheduled task context)
+# $AD_Query = "Get-ADObject -Filter {objectClass -eq 'groupPolicyContainer'} -Properties displayName, gPCFileSysPath, whenCreated, whenChanged | Select-Object Name, displayName, gPCFileSysPath, whenCreated, whenChanged"
+
+# ------------------------------------------------------------
+#  gMSA / SERVICE ACCOUNTS
+# ------------------------------------------------------------
+
+# Check the gMSA account itself
+# $AD_Query = "Get-ADServiceAccount 't0_gMSA_SHSA`$' -Properties * | Select-Object Name, Enabled, PrincipalsAllowedToRetrieveManagedPassword, ServicePrincipalNames"
+
+# List all gMSAs in the domain
+# $AD_Query = "Get-ADServiceAccount -Filter * | Select-Object Name, Enabled, DistinguishedName"
+
+# ------------------------------------------------------------
+#  GENERIC / ANY AD OBJECT
+# ------------------------------------------------------------
+
+# Fetch any object by its Distinguished Name
+# $Account = "CN=t0_gMSA_SHSA,OU=T0_Service-Accounts,OU=Tier Zero,OU=STRATA,DC=states,DC=local"
+# $AD_Query = "Get-ADObject -Identity '$Account' -Properties * | Select-Object Name, objectClass, DistinguishedName, whenCreated, whenChanged"
+
+# Search by objectClass across the whole domain
+# $AD_Query = "Get-ADObject -Filter {objectClass -eq 'msDS-GroupManagedServiceAccount'} | Select-Object Name, DistinguishedName"
+
+# Search by any attribute (e.g. find all objects with a specific description)
+# $AD_Query = "Get-ADObject -Filter {description -eq 'SharpHound'} -Properties description | Select-Object Name, objectClass, description, DistinguishedName"
+
+
+# ============================================================
+#  ACTIVE QUERY - only one $AD_Query uncommented at a time
+# ============================================================
+$AD_Query = "Get-ADObject -Filter {UserPrincipalName -eq '$Account'} -Properties userAccountControl, objectClass | Select-Object Name, SamAccountName, objectClass, userAccountControl"

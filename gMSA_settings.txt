@@ -1,0 +1,27 @@
+# ============================================================
+#  gMSA_settings.txt
+#  Edit this file to change service/task/timing settings.
+#  Do NOT edit the main script - all non-query config lives here.
+# ============================================================
+
+# --- gMSA SOURCE ---
+# auto   = detect gMSA from the service named in gMSA_ServiceName
+# manual = use the value in gMSA_Manual
+$gMSA_Source = "auto"
+
+# --- SERVICE NAME (used when gMSA_Source = auto) ---
+$gMSA_ServiceName = "SHDelegator"
+
+# --- gMSA MANUAL OVERRIDE (used when gMSA_Source = manual) ---
+# Format: DOMAIN\accountname$
+$gMSA_Manual = "states\t0_gMSA_SHSA$"
+
+# --- DC TARGET (optional) ---
+# Leave blank to let AD auto-select a DC.
+# Set to a hostname or FQDN to force the query to that DC.
+# Example: "DC01.states.local"
+$DC_Target = ""
+
+# --- TASK SETTINGS ---
+$TaskName  = "TestgMSAPermissions"
+$SleepSecs = 10
